@@ -1,0 +1,87 @@
+---
+title: "Project Uno"
+author: "Anastasia Mikova"
+date: "March 5, 2019"
+output: html_document
+---
+
+# Structure of the Data
+
+#### First, we are going to read the .csv file in R with `read.csv()` function.
+
+```{r}
+police_shootings <- read.csv(file = "shootings.csv", T, sep = ",")
+# link, so you don't lose it!!! https://github.com/washingtonpost/data-police-shootings
+```
+
+#### Since we are going to use various packages, we need to install and load them.
+
+```{r}
+ #install.packages("dplyr")
+ library(dplyr)
+```
+
+#### Then, we will look at the dimension and structure of the data with `dim()` and `str()` functions, respectively.
+
+```{r}
+dim(police_shootings)
+```
+
+```{r}
+str(police_shootings)
+```
+###### The following dataset consists of 4054 observations of 14 variables 
+
+#### Next, we are going to look at the head and the tail of the dataset.
+
+```{r}
+head(police_shootings)
+```
+
+```{r}
+tail(police_shootings)
+```
+
+# Removing Missing Values
+
+#### Next, we are going to remove all the missing values using `complete.cases()` function. We will call the new data frame 'police_shootings_full'. We are also going to remove the first column. 
+
+```{r}
+police_shootings_full <- police_shootings[complete.cases(police_shootings),]
+police_shootings_full$id <- NULL
+```
+
+#### If we look at the dimension of the new data frame, we will notice that it consists of 3898 observations of 13 variables.
+
+```{r}
+dim(police_shootings_full)
+```
+
+```{r}
+head(police_shootings_full, 3)
+```
+
+#### We are interested in how many suspects were unarmed when they were shot by the police. To find this out we can use `grep()` function for pattern matching.
+
+```{r}
+unarmed <- grep("unarmed", police_shootings_full$armed)
+str(unarmed)
+```
+###### 260 out of 3898 suspects were unarmed when shot by the police.
+
+#### We are going to do the same to find out how many suspects who were shot were black.
+
+```{r}
+black <- grep("B", police_shootings_full$race)
+str(black)
+```
+###### 943 out of 3898 suspects were black.
+
+#### `grepl()` function will give us a logical string of `TRUE` or `FALSE` values. Using `which()` function we can then select only `TRUE` values. This will be done to see how many suspects were white.
+
+```{r}
+white1 <- grepl("W", police_shootings_full$race)
+white <- which(white1, T)
+str(white)
+```
+###### 1891 out of 3898 suspects were white.
