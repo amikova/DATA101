@@ -1,0 +1,118 @@
+---
+title: "Project Uno. Police shootings in the United States."
+author: "Anastasia Mikova"
+date: "March 5, 2019"
+output: html_document
+---
+
+# Structure of the Data
+
+#### First, we are going to read the .csv file in R with `read.csv()` function. The following data set contains the information about fatal police shootings in the U.S. since January 2015 to February 2019. This information comes from The Washington Post.
+
+```{r}
+police_shootings <- read.csv(file = "shootings.csv", T, sep = ",")
+```
+
+#### Since we are going to use `dplyr`, we need to install it and load it into R.
+
+```{r}
+ #install.packages("dplyr")
+ library(dplyr)
+```
+
+#### Then, we will look at the dimension and structure of the data with `dim()` and `str()` functions, respectively.
+
+```{r}
+dim(police_shootings)
+```
+
+```{r}
+str(police_shootings)
+```
+###### The following dataset consists of 4054 observations of 14 variables 
+
+#### Next, we are going to look at the head and the tail of the dataset.
+
+```{r}
+head(police_shootings)
+```
+
+```{r}
+tail(police_shootings)
+```
+
+# Removing Missing Values
+
+#### Next, we are going to remove all the missing values using `complete.cases()` function. This can also be done usig `na.omit()`.
+
+```{r}
+police_shootings_complete <- police_shootings[complete.cases(police_shootings),]
+```
+
+```{r}
+police_shootings_complete <- na.omit(police_shootings)
+```
+
+#### If we look at the dimension of the new data frame, we will notice that it consists of 3898 observations of 14 variables. When looking at the tail, we can see that the rows with NA have been removed.
+
+```{r}
+dim(police_shootings_complete)
+```
+
+```{r}
+tail(police_shootings_complete, 3)
+```
+
+# Organizing the data
+
+#### The data frame consists of 14 variables; however, we won't be examining all of them. Therefore, we can omit certain columns.
+
+```{r}
+police_shootings_complete1 <- select(police_shootings_complete, name:race)
+police_shootings_complete1$id <- NULL
+police_shootings_complete1$manner_of_death <- NULL
+head(police_shootings_complete1)
+```
+
+# Subsetting
+
+#### We are interested in how many suspects were unarmed when they were shot by the police. We can use `subset()` function to find this out.
+
+```{r}
+unarmed_suspects <- subset(police_shootings_complete1, armed=="unarmed")
+str(unarmed_suspects)
+```
+###### 260 out of 3898 suspects were unarmed when shot by the police.
+
+#### Next, we will compare how many suspects-that we unarmed-were white and how many were black.
+
+```{r}
+white_unarmed <- subset(unarmed_suspects, race=="W")
+dim(white_unarmed)
+black_unarmed <- subset(unarmed_suspects, race=="B")
+dim(black_unarmed)
+```
+###### We can see that 110 of unarmed suspects were white, 94 were black.
+
+#### Next, we will look at how many of the killed suspects were under the age of 21. This can be achieved by using `filter()` function.
+
+```{r}
+minors <- filter(police_shootings_complete1, age<21)
+dim(minors)
+```
+###### 291 out of 3898 people were under the age of 21.
+
+# Reordering the data
+
+#### The data is organized by date in ascending order.
+
+```{r}
+head(police_shootings_complete1, 5)
+```
+
+#### We want to reorder the rows by date in descending order. 
+```{r}
+shootings_organized <- arrange(police_shootings_complete1, desc(date))
+tail(shootings_organized, 5)
+```
+###### We can see the data in the tail of the new data frame.
