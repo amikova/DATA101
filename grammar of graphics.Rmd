@@ -1,0 +1,257 @@
+---
+title: "Grammar of Graphics"
+author: "Anastasia"
+date: "April 10, 2019"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '2'
+  pdf_document:
+    keep_tex: yes
+    toc: yes
+    toc_depth: 2
+geometry: right=2.5in
+---
+
+```{r cache=FALSE, echo=FALSE}
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=5.5, fig.width=6, collapse=TRUE, comment="", prompt=TRUE)
+options(width=63)
+```
+---
+# Install packages
+
+
+---
+# Install packages
+
+### To create our visualizations we need to install and load packages that we will be using in this project. 
+
+```{r}
+install.packages("jcolors",repos = "http://cran.us.r-project.org")
+install.packages("viridisLite",repos = "http://cran.us.r-project.org")
+install.packages("viridis",repos = "http://cran.us.r-project.org")
+install.packages("ggmap",repos = "http://cran.us.r-project.org")
+```
+
+```{r}
+library("tidyverse")
+library("ggmap")
+library("jcolors")
+library("viridisLite")
+library("viridis")
+```
+
+---
+# Loading Data
+
+### In this project, we are going to work with Crime in Montgomery County data. First, we need to read .csv file into R.
+
+```{r}
+crime <- read.csv("crime.csv", sep = ",")
+head(crime)
+```
+
+---
+# Cleaning Data
+
+### Before we can visualize the data using 'ggplot2', we have to clean it. 
+
+#### We are going to load the data into what the package authors call a 'data frame tbl' or 'tbl_df', so it is easier to work with. This can be done with `tbl_df()` function.  
+
+```{r}
+crime <- tbl_df(crime)
+head(crime)
+```
+
+#### We are only interested in some of the variables, and therefore can use `select()` to only subset the columns we will be looking at.
+
+```{r}
+crime <- select(crime, Crime.Name1:Crime.Name3, Latitude, Longitude)
+head(crime)
+```
+
+#### Next, we will remove all the blanks and select columns containing only certain types of crimes. This can be done with `na.omit()` and `filter()` functions, respectively.
+
+```{r}
+crime_filtered <- na.omit(crime)
+crime_filtered <- filter(crime_filtered, Crime.Name1 == "Other" | Crime.Name1 == "Crime Against Property" | Crime.Name1 == "Crime Against Society" |Crime.Name1 == "Not a Crime" | Crime.Name1 == "Crime Against Person")
+```
+
+
+---
+
+# Plotting Data in a Bar Graph
+
+#### If we make a call to `ggplot()` and choose the data we will be working with, it will create an empty plot. Even though we specified what data we will be working with, we haven't told ggplot what to do with that data. 
+
+```{r}
+ggplot(crime_filtered)
+```
+
+#### Now we are going to create a bar graph. In ggplot we can use two functions to create bar graphs. `geom_bar()` and `geom_col()`. The two functions are similar, however, bars use count as a y-axis value, while columns allow us to specify y-axis value manually.
+
+```{r}
+ggplot(crime_filtered) + geom_bar(mapping=aes(x=Crime.Name1, fill = Crime.Name1))
+```
+
+
+#### Ggplot allows us to change our plot and make it exacly the way we want to. First, we are going to remove both plot and panel backgrounds in our plot.
+
+```{r}
+ggplot(crime_filtered) + geom_bar(mapping=aes(x=Crime.Name1, fill = Crime.Name1)) + 
+  theme(plot.background = element_blank()) +
+  theme(panel.background = element_blank())
+```
+
+#### This makes plot a little bit harder to read, so we will add grey y-axis grid lines.
+
+```{r}
+ggplot(crime_filtered) + geom_bar(mapping=aes(x=Crime.Name1, fill = Crime.Name1)) + 
+  theme(plot.background = element_blank()) +
+  theme(panel.background = element_blank()) +
+  theme(panel.grid.major.y = element_line(color="grey"))
+```
+
+#### It is still hard to read the plot, so we will change the names of the scales. x-axis scale is a disctere variable, so we will use `scale_x_discrete()` function, whereas y-axis is continuous and will require `scale_y_continuous()`. We then can change the names and add a limit for y-axis.
+
+```{r}
+ggplot(crime_filtered) + geom_bar(mapping=aes(x=Crime.Name1, fill = Crime.Name1)) + 
+  theme(plot.background = element_blank()) +
+  theme(panel.background = element_blank()) +
+  theme(panel.grid.major.y = element_line(color="grey")) +
+  scale_x_discrete(name = "Type of Crime") +
+  scale_y_continuous(name = "Number of Crimes", limits = c(0, 30000))
+```
+
+#### Now we are going to modify our legend.
+
+```{r}
+ggplot(crime_filtered) + geom_bar(mapping=aes(x=Crime.Name1, fill = Crime.Name1)) + 
+  theme(plot.background = element_blank()) +
+  theme(panel.background = element_blank()) +
+  theme(panel.grid.major.y = element_line(color="grey")) +
+  scale_x_discrete(name = "Type of Crime") +
+  scale_y_continuous(name = "Number of Crimes", limits = c(0, 30000)) +
+ scale_fill_jcolors("pal10", guide = guide_legend(title = "Type of Crime", nrow = 1, label.position = "bottom", keywidth = 2.5)) +
+  theme(legend.position = "bottom")
+```
+
+#### Finally, we will add the title and subtitle for our plot.
+
+```{r}
+ggplot(crime_filtered) + geom_bar(mapping=aes(x=Crime.Name1, fill = Crime.Name1)) + 
+  theme(plot.background = element_blank()) +
+  theme(panel.background = element_blank()) +
+  theme(panel.grid.major.y = element_line(color="grey")) +
+  scale_x_discrete(name = "Type of Crime") +
+  scale_y_continuous(name = "Number of Crimes", limits = c(0, 30000)) +
+  scale_fill_jcolors("pal10", guide = guide_legend(title = "Type of Crime", nrow = 1, label.position = "bottom", keywidth = 2.5)) +
+  theme(legend.position = "bottom") +
+  ggtitle("Crime in Montgomery County, MD",
+  subtitle = "Source: catalog.data.gov/dataset/crime")
+
+```
+
+
+---
+
+# Creating a Scatterplot
+
+#### To create a scatterplot, we need to pass Longitude and Latitude as arguments to our x- and y-axis. Unlike with a bar graph, the function for a scatterplot is `geom_point()`.
+
+```{r}
+ggplot() +
+geom_point(data = crime_filtered, aes(x = Longitude, y = Latitude))
+```
+
+#### Every crime is plotted based on its location, however, we have certain areas where crime was more prevalent and it's hard for us to judge the number of crimes in those areas. We will add transparency to our plot by adding `alpha` aestetic to our plot.
+
+```{r}
+ggplot() +
+geom_point(data = crime_filtered, aes(x = Longitude, y = Latitude), alpha = .04)
+```
+
+
+---
+
+# Creating a map
+
+#### Before we begin to work with ggmaps, we need to obtain and register an API key.
+
+```{r}
+register_google(key="AIzaSyDMpBxrUhyXmi6a7qTFazdZUS59MiFaoBk")
+```
+
+
+#### Ggmap has three main functions: `geocode()` to geocode the coordinates, `get_map()` retrieves the map, and `ggmap()` plots it. Let's geocode Montgomery County, MD.
+
+```{r}
+montgomerycounty <- geocode("Montgomery County, MD")
+montgomerycounty
+```
+
+#### We can find the coordinates by making a call to `get_map()` function and specifying the location as well. We can also change the maptype from the default 'terrain' to 'hybrid' and change the zoom.
+
+```{r}
+map_montgomerycounty <- get_map("Montgomery County, MD", maptype = "hybrid", zoom = 10)
+```
+
+#### Let's look at the map of Montgomery County, MD.
+
+```{r}
+ggmap(map_montgomerycounty)
+```
+
+#### Ggmap is very similar to gglot and requires the same aestetics. We can use the same code as we did to plot our scatterplot.
+
+```{r}
+ggmap(get_map(montgomerycounty)) + 
+  geom_point(mapping = aes(x=Longitude, y= Latitude), data = crime_filtered)
+```
+
+#### Let's make a call to `ggmap()` on 'map_montgomerycounty' and change the color to red so is easier to see it on the hybrid map. We can also modify the transparency.
+
+```{r}
+ggmap(map_montgomerycounty) + 
+  geom_point(data = crime_filtered, aes(x = Longitude, y = Latitude), alpha = .04, color = "red")
+```
+
+
+---
+# Density map
+
+#### Next, we want to create a heat map, which is basically a two-dimensional density plot. 
+
+```{r}
+ggplot() +
+  stat_density2d(data = crime_filtered, aes(x = Longitude, y = Latitude, fill = ..density..), geom = 'tile', contour = F) 
+```
+
+#### Since ggplot2 allows us to build the visualizations in layers, we can overlay the density map on top of the geographic map.
+
+```{r}
+ggmap(map_montgomerycounty) + 
+  stat_density2d(data = crime_filtered, aes(x = Longitude, y = Latitude, fill = ..density..), geom = 'tile', contour = F, alpha = .5)
+```
+
+#### Finally, let's add some colors and the title!
+
+```{r}
+ggmap(map_montgomerycounty) + 
+  stat_density2d(data = crime_filtered, aes(x = Longitude, y = Latitude, fill = ..density..), geom = 'tile', contour = F, alpha = .5) +
+  scale_fill_viridis(option = "inferno") +
+  labs(title = "Crime in Montgomery County, MD",
+  subtitle = "Source: catalog.data.gov/dataset/crime",
+  fill = "Number of Crimes")
+```
+
+
+
+
+
+
+
+
+
+
